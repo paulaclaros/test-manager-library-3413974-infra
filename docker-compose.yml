@@ -1,0 +1,80 @@
+name: test-manager-library-3413974
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-manager_library}
+      POSTGRES_USER: ${POSTGRES_USER:-manager_library}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secret_123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-manager_library} -d $${POSTGRES_DB:-manager_library}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - library-net
+
+  service:
+    build:
+      context: ../test-manager-library-3413974-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_PORT: 8080
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-manager_library}
+      DB_USERNAME: ${POSTGRES_USER:-manager_library}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secret_123}
+      JWT_SECRET: ${JWT_SIGNING_KEY:-manager_library_super_secret_jwt_key_3413974_adso}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123*}
+    volumes:
+      - covers:/var/www/storage/app/public/covers
+    healthcheck:
+      test: ["CMD-SHELL", "php -r \"file_get_contents('http://127.0.0.1:8080/health') ?: exit(1);\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    ports:
+      - "8000:8080"
+      - "5000:8080"
+    networks:
+      - library-net
+
+  portal:
+    build:
+      context: ../test-manager-library-3413974-app
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      service:
+        condition: service_healthy
+    ports:
+      - "${PORTAL_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - library-net
+
+volumes:
+  pgdata:
+  covers:
+
+networks:
+  library-net:
+    driver: bridge
