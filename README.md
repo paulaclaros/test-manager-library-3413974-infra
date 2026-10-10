@@ -10,7 +10,7 @@
 | Servicio | Imagen / Contexto | Puerto Interno | Puerto Anfitrión | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | **`db`** | `postgres:16-alpine` | `5432` | — | Motor relacional PostgreSQL 16. Arranca con esquema vacío (Artículo V). |
-| **`service`** | `../test-manager-library-3413974-api` | `8080` | `8000` / `5000` | Backend API en Laravel 10 (PHP 8.2). Aplica migraciones e inicializa admin. |
+| **`service`** | `../test-manager-library-3413974-api` | `8080` | `8000` | Backend API en Laravel 10 (PHP 8.2). Aplica migraciones e inicializa admin. |
 | **`portal`** | `../test-manager-library-3413974-app` | `80` | `8080` | Frontend SPA en React 18 servido mediante Nginx alpine. |
 
 ---
